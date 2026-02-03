@@ -1,0 +1,3 @@
+[submodule "cargo-doc-md"]
+	path = cargo-doc-md
+	url = https://github.com/okoyfoeciov/cargo-doc-md.git
