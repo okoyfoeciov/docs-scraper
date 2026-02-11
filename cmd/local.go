@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	localPaths     []string
-	localExts      []string
+	localPaths      []string
+	localExts       []string
 	localOutputFile string
 )
 
@@ -76,10 +76,10 @@ var localCmd = &cobra.Command{
 
 				// Check if inside root (symlinks might lead outside, though Walk follows structure, but user script used realpath checks)
 				// filepath.Walk does not follow symlinks by default, but the bash script used `find -L`.
-				// To truly support `find -L`, we'd need to explicitly follow symlinks. 
-				// For simplicity in this v1, typical usages are direct files. 
+				// To truly support `find -L`, we'd need to explicitly follow symlinks.
+				// For simplicity in this v1, typical usages are direct files.
 				// However, let's just process.
-				
+
 				relFile, _ := filepath.Rel(absRoot, path)
 
 				fmt.Fprintf(outFile, "<!-- FILE: %s -->\n\n### %s\n\n", relFile, relFile)
@@ -101,7 +101,7 @@ var localCmd = &cobra.Command{
 					}
 					fmt.Fprintln(outFile, line)
 				}
-				
+
 				fmt.Fprintln(outFile, "\n\n---\n\n")
 
 				return nil

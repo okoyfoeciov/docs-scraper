@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	rustCrateName     string
-	rustCrateVersion  string
-	rustOutputFile    string
-	converterPath     string
+	rustCrateName    string
+	rustCrateVersion string
+	rustOutputFile   string
+	converterPath    string
 )
 
 var rustCmd = &cobra.Command{
@@ -40,7 +40,7 @@ var rustCmd = &cobra.Command{
 		// Download JSON
 		url := fmt.Sprintf("https://docs.rs/crate/%s/%s/json.gz", rustCrateName, rustCrateVersion)
 		fmt.Printf("Downloading %s...\n", url)
-		
+
 		resp, err := http.Get(url)
 		if err != nil {
 			return fmt.Errorf("failed to download: %w", err)
@@ -110,9 +110,9 @@ var rustCmd = &cobra.Command{
 
 		for _, file := range mdFiles {
 			relPath, _ := filepath.Rel(tmpDir, file)
-			
+
 			fmt.Fprintf(outFile, "<!-- FILE: %s -->\n\n", relPath)
-			
+
 			content, err := os.ReadFile(file)
 			if err != nil {
 				return err
@@ -132,5 +132,5 @@ func init() {
 	rustCmd.Flags().StringVarP(&rustCrateName, "crate", "c", "", "Crate name")
 	rustCmd.Flags().StringVarP(&rustCrateVersion, "version", "v", "latest", "Crate version")
 	rustCmd.Flags().StringVarP(&rustOutputFile, "output", "o", "", "Output filename")
-	rustCmd.Flags().StringVar(&converterPath, "converter", "./cargo-doc-md/target/release/cargo-doc-md", "Path to cargo-doc-md binary")
+	rustCmd.Flags().StringVar(&converterPath, "converter", "./cargo-doc-md", "Path to cargo-doc-md binary")
 }

@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	ghRepoURL   string
-	ghPaths     []string
-	ghExts      []string
+	ghRepoURL    string
+	ghPaths      []string
+	ghExts       []string
 	ghOutputFile string
 )
 
@@ -32,7 +32,7 @@ var githubCmd = &cobra.Command{
 		if ghOutputFile == "" {
 			ghOutputFile = "output.md"
 		}
-		
+
 		// If ghPaths is empty, default to root "."? No, the bash script says:
 		// if [ ${#docs_dirs[@]} -eq 0 ]; then docs_dirs=(".")
 		if len(ghPaths) == 0 {
@@ -61,7 +61,7 @@ var githubCmd = &cobra.Command{
 		defer outFile.Close()
 
 		// Regex for cleaning imports/exports
-		// Match lines starting with optional whitespace, then import ..., ending with ; 
+		// Match lines starting with optional whitespace, then import ..., ending with ;
 		// Match lines starting with optional whitespace, then export ...
 		importRe := regexp.MustCompile(`^\s*import\s.*;\s*$`)
 		exportRe := regexp.MustCompile(`^\s*export\s.*$`)
@@ -81,7 +81,7 @@ var githubCmd = &cobra.Command{
 				if info.IsDir() {
 					return nil
 				}
-				
+
 				// Check extension
 				matchExt := false
 				for _, ext := range ghExts {
@@ -118,7 +118,7 @@ var githubCmd = &cobra.Command{
 					}
 					fmt.Fprintln(outFile, line)
 				}
-				
+
 				fmt.Fprintln(outFile, "\n\n---\n\n")
 				return nil
 			})

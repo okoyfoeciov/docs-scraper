@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	goPkgPath  string
-	goRootPath string
+	goPkgPath    string
+	goRootPath   string
 	goOutputFile string
 )
 
@@ -57,7 +57,7 @@ var goCmd = &cobra.Command{
 		// GIT_ROOT="$ROOT_PATH"
 		// if [[ "$GIT_ROOT" =~ /v[0-9]+$ ]]; then GIT_ROOT="${GIT_ROOT%/*}"; fi
 		// git clone "https://$GIT_ROOT"
-		
+
 		cloneUrl := "https://" + gitRoot
 		if idx := strings.LastIndex(gitRoot, "/v"); idx != -1 {
 			// Basic check if it looks like a version
@@ -98,7 +98,7 @@ var goCmd = &cobra.Command{
 		// REL_PATH logic from bash is complex.
 		// It tries to find the relative path of the pkg inside the repo.
 		// REPO_BASE construction matches ROOT_PATH logic roughly.
-		
+
 		var relPath string
 		repoBase := goRootPath // Assuming this matches what we cloned or the root of the module
 		// Bash script logic:
@@ -125,18 +125,18 @@ var goCmd = &cobra.Command{
 		} else {
 			relPath = "."
 		}
-		
+
 		fmt.Printf("Running go doc on %s inside %s\n", relPath, tmpDir)
-		
+
 		// Run go doc in the repo dir
 		// go doc might require go.mod to be valid?
 		// "go doc -all ."
-		
+
 		docCmd := exec.Command("go", "doc", "-all", relPath)
 		docCmd.Dir = tmpDir
 		docCmd.Stdout = outFile
 		// docCmd.Stderr = os.Stderr // Bash ignored stderr and printed "No Go Doc found" if failed, let's allow it to fail silently-ish or capture output
-		
+
 		if err := docCmd.Run(); err != nil {
 			fmt.Fprintln(outFile, "No Go Doc found for this package.")
 		}
