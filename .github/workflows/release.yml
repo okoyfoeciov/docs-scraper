@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Build Go binary
+        run: go build -o docs-scraper main.go
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Build Rust binary
+        run: |
+          cd cargo-doc-md
+          cargo build --release
+
+      - name: Determine Next Version
+        id: version
+        run: |
+          # Fetch all tags
+          git fetch --tags
+          
+          # Get the latest tag, default to v0.0.0 if none exist
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Last tag: $LAST_TAG"
+          
+          # Remove 'v' prefix
+          VERSION=${LAST_TAG#v}
+          
+          # Split version into parts (Major.Minor.Patch)
+          IFS='.' read -r -a PARTS <<< "$VERSION"
+          MAJOR=${PARTS[0]}
+          MINOR=${PARTS[1]}
+          # Handle cases where patch version might be missing or empty
+          if [ -z "$MINOR" ]; then MINOR=0; fi
+          
+          # Increment Minor version
+          NEW_MINOR=$((MINOR + 1))
+          NEW_VERSION="v$MAJOR.$NEW_MINOR.0"
+          
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
+
+      - name: Prepare Release Artifacts
+        run: |
+          zip -j release.zip docs-scraper cargo-doc-md/target/release/cargo-doc-md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          files: release.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
