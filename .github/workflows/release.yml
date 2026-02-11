@@ -70,13 +70,13 @@ jobs:
 
       - name: Prepare Release Artifacts
         run: |
-          zip -j doc-scraper.zip docs-scraper cargo-doc-md/target/release/cargo-doc-md
+          zip -j docs-scraper.zip docs-scraper cargo-doc-md/target/release/cargo-doc-md
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
-          files: doc-scraper.zip
+          files: docs-scraper.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
