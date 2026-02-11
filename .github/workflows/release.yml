@@ -9,8 +9,19 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
-    runs-on: ubuntu-latest
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: docs-scraper-linux-amd64.zip
+            target: x86_64-unknown-linux-gnu
+          - os: macos-14
+            artifact_name: docs-scraper-macos-arm64.zip
+            target: aarch64-apple-darwin
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,11 +39,41 @@ jobs:
 
       - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
 
       - name: Build Rust binary
         run: |
           cd cargo-doc-md
-          cargo build --release
+          cargo build --release --target ${{ matrix.target }}
+        # Note: On macOS, target is simpler because we run on the actual hardware (macos-14 is M1/M2)
+        # On Ubuntu, target is default x86_64, so explicit target is good but default works too.
+
+      - name: Prepare Release Artifacts
+        run: |
+          # Create zip with specific name
+          zip -j ${{ matrix.artifact_name }} docs-scraper cargo-doc-md/target/${{ matrix.target }}/release/cargo-doc-md
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
 
       - name: Determine Next Version
         id: version
@@ -68,15 +109,11 @@ jobs:
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
 
-      - name: Prepare Release Artifacts
-        run: |
-          zip -j docs-scraper.zip docs-scraper cargo-doc-md/target/release/cargo-doc-md
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
-          files: docs-scraper.zip
+          files: artifacts/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
